@@ -96,7 +96,7 @@ nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-
  <div class="card"><h2>A pagar al proveedor</h2><div id="prov"></div>
   <button class="big" id="pagoprov">Ya le pagué al proveedor</button></div>
  <div class="kpis" style="grid-template-columns:1fr"><div class="kpi"><span>Ya pagado al proveedor</span><b id="provpag">$0</b></div></div>
- <div class="card"><div id="historialProv"></div></div>
+ <div class="card"><h2>Historial de pagos</h2><div id="historialProv"></div></div>
 </section>
 
 <section class="view" id="v-res">
@@ -293,11 +293,17 @@ function renderProv(){
       pendientes.map(function(o){
         var c=(o.costo||0)*(o.cantidad||0);
         var estado = o.enStock ? '<span class="bd ok">✓ En stock</span>' : '<span class="bd wait">⏳ Esperando</span>';
-        var accion = o.enStock ? '<button data-pa="pay" data-id="'+esc(o.id)+'">💵 Pagar</button>' : '<button data-pa="stock" data-id="'+esc(o.id)+'">📦 Recibido</button>';
+        var accion = o.enStock ? '<button data-pa="pay" data-id="'+esc(o.id)+'">💵 Pagar</button><button data-pa="unstock" data-id="'+esc(o.id)+'" style="margin-top:6px">↩ No llegó</button>' : '<button data-pa="stock" data-id="'+esc(o.id)+'">📦 Recibido</button>';
         return '<tr><td><b>'+esc(o.cliente)+'</b></td><td>'+estado+'</td><td class="n">'+money(c)+'</td><td>'+accion+'</td></tr>';
       }).join("")+'</table>';
   } else html += '<div class="empty">No hay pagos pendientes 🎉</div>';
   $("prov").innerHTML=html;
+  var hist=orders.filter(function(o){return o.provPagado}).sort(function(a,b){return String(a.fechaPagoProv||a.fecha)<String(b.fechaPagoProv||b.fecha)?1:-1});
+  $("historialProv").innerHTML = hist.length
+    ? '<table class="tbl"><tr><th>Pago</th><th>Pedido</th><th class="n">Costo</th><th></th></tr>'+hist.map(function(o){
+        return '<tr><td>'+esc(fd(o.fechaPagoProv||o.fecha))+'</td><td><b>'+esc(o.cliente)+'</b><div class="sub" style="margin:0">'+esc(o.detalle||o.producto)+' × '+esc(o.cantidad)+'</div></td><td class="n">'+money((o.costo||0)*(o.cantidad||0))+'</td><td><button data-pa="unpay" data-id="'+esc(o.id)+'">↩ Deshacer</button></td></tr>';
+      }).join("")+'</table>'
+    : '<div class="empty">Todavía no le pagaste nada al proveedor.</div>';
 }
 
 function barChart(vals, fmt){
@@ -364,7 +370,22 @@ document.querySelector("#v-prov").onclick = function(e){
   var b=e.target.closest("button[data-pa]"); if(!b) return;
   var id=b.dataset.id;
   if(b.dataset.pa==="stock") upd(id,{enStock:true});
+  else if(b.dataset.pa==="unstock") ask("¿Volver este pedido a 'Esperando proveedor'?", function(){
+    upd(id,{enStock:false});
+  });
+  else if(b.dataset.pa==="unpay") ask("¿Marcar este pedido como NO pagado al proveedor?", function(){
+    upd(id,{provPagado:false,fechaPagoProv:firebase.firestore.FieldValue.delete()});
+  });
   else if(b.dataset.pa==="pay") upd(id,{provPagado:true,fechaPagoProv:hoy()});
+};
+$("pagoprov").onclick = function(){
+  var listos=orders.filter(function(o){return o.enStock && !o.provPagado});
+  if(!listos.length) return;
+  ask("¿Marcar como pagados los "+listos.length+" pedidos que ya están en stock?", function(){
+    var batch=db.batch();
+    listos.forEach(function(o){ batch.update(db.collection("pedidos").doc(o.id),{provPagado:true,fechaPagoProv:hoy()}); });
+    batch.commit().then(function(){toast("Pago al proveedor registrado ✓")}).catch(function(){toast("Error al registrar el pago.")});
+  });
 };
 $("asknop").onclick = function(){$("ovl").style.display="none";askFn=null};
 $("askyes").onclick = function(){$("ovl").style.display="none";var f=askFn;askFn=null;if(f)f()};
@@ -385,11 +406,6 @@ db.collection("config").doc("stock").onSnapshot(function(doc) {
     refreshBomb();
     renderRes();
   }
-});
-
-tipo();
-</script>
-</body></html>
 });
 
 tipo();
