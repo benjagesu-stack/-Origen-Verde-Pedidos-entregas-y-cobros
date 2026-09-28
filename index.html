@@ -54,10 +54,20 @@ input,select,button{font:inherit;width:100%;padding:12px;border-radius:12px;bord
 .stock{font-size:13px;line-height:1.7}.stock b{color:var(--g)}
 svg{width:100%;height:auto;display:block}
 .view{display:none}.view.on{display:block}
-.toast{position:fixed;left:14px;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:612px;margin:auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;font-size:14px;z-index:20;display:none;text-align:center}
+.toast{position:fixed;left:14px;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:612px;margin:auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;font-size:14px;z-index:40;display:none;text-align:center}
 .ovl{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;display:none;align-items:flex-end;justify-content:center}
 .sheet{background:var(--card);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
 .sheet p{margin:0 0 14px;font-size:16px}.sheet .row button{font-weight:700;cursor:pointer}.sheet .go{background:var(--g);color:#fff;border:0}
+.prio{display:flex;gap:10px}
+.prio button{flex:none;width:38px;height:22px;padding:0;border-radius:99px;border:2px solid transparent;cursor:pointer;opacity:.35;background:#2f9e6b;transition:opacity .15s}
+.prio button[data-p="urgente"]{background:#d64545}
+.prio button.on{opacity:1;border-color:var(--ink)}
+.urg{background:var(--red2);color:var(--red)}.calm{background:var(--g2);color:var(--g)}
+.chk{display:flex;align-items:center;gap:10px;margin:0;padding:10px 2px;border-bottom:1px solid var(--line);font-size:14px;color:var(--ink);cursor:pointer}
+.chk input{width:22px;height:22px;flex:none;padding:0;margin:0}
+.chk span.t{flex:1}
+textarea{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-top:12px;resize:vertical}
+.btn2{cursor:pointer;font-weight:600;font-size:14px}
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));max-width:640px;margin:auto;z-index:5}
 nav button{background:none;border:0;padding:6px 2px;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
 nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-weight:700}
@@ -83,10 +93,12 @@ nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-
 <header><h1>🌿 Origen Verde</h1><p id="appGreeting">Pedidos, entregas y cobros</p></header>
 
 <section class="view on" id="v-nuevo">
- <div class="card"><h2>Nuevo pedido</h2>
+ <h2>Nuevo pedido</h2>
   <div class="row"><div><label for="fecha">Fecha</label><input type="date" id="fecha"></div>
   <div><label for="cant">Cantidad</label><input type="number" id="cant" min="1" value="1" inputmode="numeric"></div></div>
   <label for="cli">Cliente</label><input id="cli" placeholder="Nombre del cliente" autocomplete="off">
+  <label>Prioridad</label>
+  <div class="prio" id="prio"><button type="button" data-p="tranquilo" class="on" aria-label="Tranquilo"></button><button type="button" data-p="urgente" aria-label="Urgente"></button></div>
   <label for="prod">Producto</label>
   <select id="prod"><option>Bombacha</option><option>Alpargata</option></select>
   <div id="bomb"><div class="row"><div><label for="tela">Tela</label><select id="tela"></select></div>
@@ -98,6 +110,16 @@ nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-
   <div class="auto"><div>Precio unidad<b id="pv">-</b></div><div>Costo unidad<b id="pc">-</b></div>
   <div>Total venta<b id="tv">-</b></div><div>Ganancia<b id="pg">-</b></div></div>
   <button class="big" id="add">Guardar pedido</button></div>
+ <div class="card"><button id="stkToggle" type="button" style="display:flex;justify-content:space-between;align-items:center;background:none;border:0;padding:0;font-weight:700;cursor:pointer;color:var(--ink)"><span>📦 Nuevo stock de bombachas</span><span id="stkArrow">▾</span></button>
+  <div id="stkBody" style="display:none">
+   <div class="row"><div><label for="sTela">Tela</label><select id="sTela"></select></div>
+   <div><label for="sTalle">Talle</label><select id="sTalle"></select></div></div>
+   <div class="row"><div><label for="sCol">Color</label><select id="sCol"></select></div>
+   <div><label for="sCant">Cantidad</label><input type="number" id="sCant" min="1" value="1" inputmode="numeric"></div></div>
+   <div class="stk" id="sInfo"></div>
+   <button class="big" id="sAdd" type="button">➕ Agregar al stock</button>
+   <div class="row" style="margin-top:10px"><div><button id="sSub" type="button" class="btn2">➖ Quitar cantidad</button></div><div><button id="sZero" type="button" class="btn2" style="color:var(--red)">🗑 Ya no hay</button></div></div>
+  </div></div>
 </section>
 
 <section class="view" id="v-pedidos">
@@ -111,6 +133,14 @@ nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-
   <button class="big" id="pagoprov">Ya le pagué al proveedor</button></div>
  <div class="kpis" style="grid-template-columns:1fr"><div class="kpi"><span>Ya pagado al proveedor</span><b id="provpag">$0</b></div></div>
  <div class="card"><h2>Historial de pagos</h2><div id="historialProv"></div></div>
+ <div class="card" id="msgCard" style="display:none"><button id="msgToggle" type="button" style="display:flex;justify-content:space-between;align-items:center;background:none;border:0;padding:0;font-weight:700;cursor:pointer;color:var(--ink)"><span>✉️ Armar pedido para el proveedor <span style="font-weight:400;font-size:12px;color:var(--mut)">(beta)</span></span><span id="msgArrow">▾</span></button>
+  <div id="msgBody" style="display:none">
+  <div class="sub" style="font-size:13px;color:var(--mut);margin-bottom:6px">Tildá los que quieras incluir. El texto no lleva nombres de clientes.</div>
+  <label for="msgProv">Proveedor</label><input id="msgProv" value="Cucha" autocomplete="off" style="margin-bottom:8px">
+  <div id="msgList"></div>
+  <textarea id="msgTxt" rows="9" placeholder="Acá aparece el texto del pedido…"></textarea>
+  <div class="row" style="margin-top:10px"><div><button id="msgCopy" class="btn2">📋 Copiar</button></div><div><button id="msgWa" class="btn2">💬 WhatsApp</button></div></div>
+  <button id="msgClear" class="btn2" style="margin-top:8px;background:none">Limpiar selección</button></div></div>
 </section>
 
 <section class="view" id="v-res">
@@ -172,6 +202,7 @@ $("loginUser").onchange = function(){aplicarTema(this.value)};
 aplicarTema($("loginUser").value);
 function iniciarSesion(){
   var u = $("loginUser").value;
+  $("msgCard").style.display = (u==="Benja") ? "" : "none";
   aplicarTema(u);
   currentUser = USERS[u];
   $("loginScreen").style.display = "none";
@@ -246,12 +277,12 @@ function addOrder(){
     det = "Alpargata · "+$("cola").value+" · T"+$("tala").value;
   }
   var o = {fecha:$("fecha").value, cliente:cli, producto:prod, detalle:det, cantidad:q,
-           venta:p.venta, costo:p.costo, total:p.venta*q, ganancia:(p.venta-p.costo)*q, entregado:false, pagado:false, provPagado:false, enStock:false,
+           venta:p.venta, costo:p.costo, total:p.venta*q, ganancia:(p.venta-p.costo)*q, entregado:false, pagado:false, provPagado:false, enStock:false, prioridad:prioSel,
            creadoPor:(currentUser&&currentUser.nombre)||"Sin registrar"};
   if(key){ o.stockKey = key.join("|"); stock[t][tl][c] -= q; saveStock(); }
   
   db.collection("pedidos").add(o).then(function(){
-    $("cli").value = ""; $("cant").value = 1; tipo();
+    $("cli").value = ""; $("cant").value = 1; setPrio("tranquilo"); tipo();
     toast("Pedido guardado en la base de datos ✓");
   }).catch(function(){ toast("Error al guardar."); });
 }
@@ -271,6 +302,11 @@ function upd(id, patch){ db.collection("pedidos").doc(id).update(patch); }
 
 function fd(f){return String(f||"").split("-").reverse().join("/")}
 
+var prioSel = "tranquilo";
+function setPrio(v){prioSel=v; document.querySelectorAll("#prio button").forEach(function(b){b.classList.toggle("on",b.dataset.p===v)})}
+$("prio").onclick = function(e){var b=e.target.closest("button[data-p]"); if(b) setPrio(b.dataset.p)};
+function isUrg(o){return o.prioridad==="urgente"}
+function prioBadge(o){return isUrg(o)?'<span class="bd urg">🔴 Urgente</span>':'<span class="bd calm">🟢 Tranquilo</span>'}
 function renderPedidos(){
   var ent=0, cob=0, cobrado=0;
   orders.forEach(function(o){
@@ -278,11 +314,11 @@ function renderPedidos(){
     if(o.pagado) cobrado+=o.total||0; else cob+=o.total||0;
   });
   $("p1").textContent=ent; $("p2").textContent=money(cob); $("p3").textContent=money(cobrado);
-  var F=[["todos","Todos"],["entregar","Por entregar"],["cobrar","Por cobrar"],["entregados","Entregados"]];
+  var F=[["todos","Todos"],["entregar","Por entregar"],["urgentes","🔴 Urgentes"],["cobrar","Por cobrar"],["entregados","Entregados"]];
   $("chips").innerHTML=F.map(function(f){return '<button class="chip'+(filtro===f[0]?' on':'')+'" data-f="'+f[0]+'">'+f[1]+'</button>'}).join("");
   var rows=orders.filter(function(o){
-    return filtro==="todos"||(filtro==="entregar"&&!o.entregado)||(filtro==="cobrar"&&!o.pagado)||(filtro==="entregados"&&o.entregado);
-  }).sort(function(a,b){return a.fecha<b.fecha?1:-1});
+    return filtro==="todos"||(filtro==="entregar"&&!o.entregado)||(filtro==="urgentes"&&isUrg(o)&&!o.entregado)||(filtro==="cobrar"&&!o.pagado)||(filtro==="entregados"&&o.entregado);
+  }).sort(function(a,b){var ra=(isUrg(a)&&!a.entregado)?0:1, rb=(isUrg(b)&&!b.entregado)?0:1; if(ra!==rb) return ra-rb; return a.fecha<b.fecha?1:-1});
   if(!rows.length){ $("lista").innerHTML='<div class="empty">No hay pedidos acá.</div>'; return; }
   $("lista").innerHTML=rows.map(function(o){
     var disponible = !!o.enStock || !!o.entregado;
@@ -290,9 +326,10 @@ function renderPedidos(){
     var p=o.pagado?'<span class="bd ok">✓ Pagó</span>':'<span class="bd bad">Debe '+money(o.total||0)+'</span>';
     var entBtn = o.entregado ? '<button data-a="ent" data-id="'+esc(o.id)+'">Deshacer entrega</button>' : (disponible ? '<button data-a="ent" data-id="'+esc(o.id)+'">📦 Marcar entregado</button>' : '<button disabled>🔒 Esperando proveedor</button>');
     return '<div class="ord"><div class="top"><b>'+esc(o.cliente)+'</b><b>'+money(o.total||0)+'</b></div>'+
-    '<div class="sub">'+esc(o.detalle||o.producto)+' × '+esc(o.cantidad)+' · pedido '+esc(fd(o.fecha))+' · 👤 '+esc(o.creadoPor||"Sin registrar")+'</div>'+e+p+
+    '<div class="sub">'+esc(o.detalle||o.producto)+' × '+esc(o.cantidad)+' · pedido '+esc(fd(o.fecha))+' · 👤 '+esc(o.creadoPor||"Sin registrar")+'</div>'+(o.entregado?'':prioBadge(o))+e+p+
     '<div class="acts">'+entBtn+'<button data-a="pag" data-id="'+esc(o.id)+'">'+(o.pagado?'Deshacer pago':'💵 Marcar pagó')+'</button>'+
-    '<button class="x" data-a="del" data-id="'+esc(o.id)+'">×</button></div></div>';
+    '<button class="x" data-a="del" data-id="'+esc(o.id)+'">×</button></div>'+
+    (o.entregado?'':'<div class="acts" style="margin-top:8px"><button data-a="prio" data-id="'+esc(o.id)+'">'+(isUrg(o)?'🟢 Pasar a tranquilo':'🔴 Marcar urgente')+'</button></div>')+'</div>';
   }).join("");
 }
 
@@ -304,13 +341,13 @@ function renderProv(){
   });
   $("provpag").textContent=money(pagado);
   $("pagoprov").style.display=pendiente ? "" : "none";
-  var pendientes=orders.filter(function(o){return !o.provPagado}).sort(function(a,b){return a.fecha<b.fecha?1:-1});
+  var pendientes=orders.filter(function(o){return !o.provPagado}).sort(function(a,b){var ra=(isUrg(a)&&!a.enStock)?0:1, rb=(isUrg(b)&&!b.enStock)?0:1; if(ra!==rb) return ra-rb; return a.fecha<b.fecha?1:-1});
   var html='<div class="sub" style="margin-bottom:10px">⏳ Esperando proveedor: <b>'+money(esperando)+'</b> · 🟢 Listo para pagar: <b>'+money(pendiente)+'</b></div>';
   if(pendientes.length){
     html += '<table class="tbl"><tr><th>Pedido</th><th>Estado</th><th class="n">Costo</th><th></th></tr>'+
       pendientes.map(function(o){
         var c=(o.costo||0)*(o.cantidad||0);
-        var estado = o.enStock ? '<span class="bd ok">✓ En stock</span>' : '<span class="bd wait">⏳ Esperando</span>';
+        var estado = (o.enStock ? '<span class="bd ok">✓ En stock</span>' : '<span class="bd wait">⏳ Esperando</span>') + (!o.enStock&&isUrg(o)?'<span class="bd urg">🔴 Urgente</span>':'');
         var accion = o.enStock ? '<button data-pa="pay" data-id="'+esc(o.id)+'">💵 Pagar</button><button data-pa="unstock" data-id="'+esc(o.id)+'" style="margin-top:6px">↩ No llegó</button>' : '<button data-pa="stock" data-id="'+esc(o.id)+'">📦 Recibido</button>';
         return '<tr><td><b>'+esc(o.cliente)+'</b></td><td>'+estado+'</td><td class="n">'+money(c)+'</td><td>'+accion+'</td></tr>';
       }).join("")+'</table>';
@@ -361,7 +398,65 @@ function renderRes(){
   $("stock").innerHTML = h;
 }
 
-function render(){ renderPedidos(); renderProv(); renderRes(); }
+var selMsg = {}, msgDirty = false;
+function pendProv(){
+  return orders.filter(function(o){return !o.enStock && !o.entregado}).sort(function(a,b){
+    var ra=isUrg(a)?0:1, rb=isUrg(b)?0:1; if(ra!==rb) return ra-rb; return a.fecha<b.fecha?1:-1;
+  });
+}
+function lineaProd(o){return String(o.detalle||o.producto||"").split(" · ").join(" ")}
+function buildMsgText(){
+  var sel = pendProv().filter(function(o){return selMsg[o.id]});
+  if(!sel.length) return "";
+  function grupo(list){
+    var g={}, ord=[];
+    list.forEach(function(o){var k=lineaProd(o); if(!(k in g)){g[k]=0; ord.push(k)} g[k]+=(o.cantidad||0)});
+    return ord.map(function(k){return "• "+g[k]+" × "+k}).join("\n");
+  }
+  var u=sel.filter(isUrg), t=sel.filter(function(o){return !isUrg(o)});
+  var nom=($("msgProv").value||"").trim();
+  var out="¡Hola"+(nom?" "+nom:"")+"! 🌿 ¿Cómo andás?\nTe paso lo que necesito para esta tanda:\n";
+  if(u.length) out+="\n✨ Para ir preparando primero:\n"+grupo(u)+"\n";
+  if(t.length) out+="\n🌱 Cuando puedas, sin apuro:\n"+grupo(t)+"\n";
+  return out+"\n¡Mil gracias por todo! 🙌";
+}
+function updMsgText(force){
+  if(msgDirty && !force) return;
+  $("msgTxt").value = buildMsgText(); msgDirty=false;
+}
+function renderMsg(){
+  var pend = pendProv(), ids={};
+  pend.forEach(function(o){ids[o.id]=1});
+  Object.keys(selMsg).forEach(function(k){ if(!ids[k]) delete selMsg[k] });
+  $("msgList").innerHTML = pend.length ? pend.map(function(o){
+    return '<label class="chk"><input type="checkbox" data-id="'+esc(o.id)+'"'+(selMsg[o.id]?' checked':'')+'><span class="t">'+esc(lineaProd(o))+' × '+esc(o.cantidad)+'</span>'+
+      (isUrg(o)?'<span class="bd urg" style="margin:0">🔴 Urgente</span>':'<span class="bd calm" style="margin:0">🟢</span>')+'</label>';
+  }).join("") : '<div class="empty">No hay pedidos esperando al proveedor.</div>';
+  updMsgText();
+}
+$("msgToggle").onclick = function(){
+  var o=$("msgBody").style.display==="none";
+  $("msgBody").style.display=o?"":"none"; $("msgArrow").textContent=o?"▴":"▾";
+};
+$("msgList").onchange = function(e){
+  var c=e.target.closest("input[data-id]"); if(!c) return;
+  if(c.checked) selMsg[c.dataset.id]=1; else delete selMsg[c.dataset.id];
+  msgDirty=false; updMsgText(true);
+};
+$("msgProv").oninput = function(){msgDirty=false; updMsgText(true)};
+$("msgTxt").oninput = function(){msgDirty=true};
+$("msgClear").onclick = function(){selMsg={}; msgDirty=false; renderMsg()};
+$("msgCopy").onclick = function(){
+  var t=$("msgTxt").value; if(!t.trim()){toast("Elegí al menos un pedido."); return;}
+  function fb(){$("msgTxt").select(); try{document.execCommand("copy"); toast("Texto copiado ✓")}catch(e){toast("No se pudo copiar.")}}
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){toast("Texto copiado ✓")}).catch(fb); else fb();
+};
+$("msgWa").onclick = function(){
+  var t=$("msgTxt").value; if(!t.trim()){toast("Elegí al menos un pedido."); return;}
+  window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank");
+};
+
+function render(){ renderPedidos(); renderProv(); renderMsg(); renderRes(); }
 
 (function(){var h="";for(var n=35;n<=45;n++)h+="<option>"+n+"</option>";$("tala").innerHTML=h;$("tala").value="40"})();
 $("fecha").value = hoy();
@@ -382,6 +477,7 @@ $("lista").onclick = function(e){
   var id=b.dataset.id, o=orders.filter(function(x){return x.id===id})[0]; if(!o) return;
   if(b.dataset.a==="ent") upd(id, o.entregado?{entregado:false}:{entregado:true,fechaEntrega:hoy()});
   else if(b.dataset.a==="pag") upd(id,{pagado:!o.pagado});
+  else if(b.dataset.a==="prio") upd(id,{prioridad:isUrg(o)?"tranquilo":"urgente"});
   else if(b.dataset.a==="del") del(id);
 };
 document.querySelector("#v-prov").onclick = function(e){
@@ -423,9 +519,55 @@ db.collection("config").doc("stock").onSnapshot(function(doc) {
     stock = doc.data().items;
     refreshBomb();
     renderRes();
+    if($("sInfo"))stkInfo();
   }
 });
 
+function stkActual(){return avail($("sTela").value,$("sTalle").value,$("sCol").value)}
+function stkInfo(){$("sInfo").textContent="Stock actual de esta combinación: "+stkActual()}
+(function(){
+  $("sTela").innerHTML=Object.keys(TELAS).map(function(k){return '<option value="'+k+'">'+esc(TELAS[k])+'</option>'}).join("");
+  var h="";for(var n=38;n<=52;n+=2)h+="<option>"+n+"</option>";$("sTalle").innerHTML=h;$("sTalle").value="46";
+  $("sCol").innerHTML=Object.keys(COLORES).map(function(k){return '<option value="'+k+'">'+esc(COLORES[k])+'</option>'}).join("");
+  ["sTela","sTalle","sCol"].forEach(function(id){$(id).onchange=stkInfo});
+  $("stkToggle").onclick=function(){var o=$("stkBody").style.display==="none";$("stkBody").style.display=o?"":"none";$("stkArrow").textContent=o?"▴":"▾";if(o)stkInfo()};
+  $("sAdd").onclick=function(){
+    var q=parseInt($("sCant").value,10);
+    if(!q||q<1){toast("Poné una cantidad.");return}
+    var t=$("sTela").value,tl=$("sTalle").value,c=$("sCol").value;
+    stock[t]=stock[t]||{};stock[t][tl]=stock[t][tl]||{};
+    stock[t][tl][c]=(stock[t][tl][c]||0)+q;
+    saveStock();$("sCant").value=1;stkInfo();refreshBomb();renderRes();
+    toast("Stock agregado ✓ ("+q+" "+TELAS[t]+" T"+tl+" "+COLORES[c]+")");
+  };
+  function quitar(t,tl,c,n){
+    var cur=avail(t,tl,c), nuevo=Math.max(0,cur-n);
+    if(nuevo>0) stock[t][tl][c]=nuevo;
+    else{
+      delete stock[t][tl][c];
+      if(!Object.keys(stock[t][tl]).length) delete stock[t][tl];
+    }
+    saveStock();stkInfo();refreshBomb();renderRes();
+  }
+  $("sSub").onclick=function(){
+    var q=parseInt($("sCant").value,10);
+    var t=$("sTela").value,tl=$("sTalle").value,c=$("sCol").value, cur=avail(t,tl,c);
+    if(!cur){toast("No hay stock de esa combinación.");return}
+    if(!q||q<1){toast("Poné una cantidad.");return}
+    var n=Math.min(q,cur);
+    ask("¿Quitar "+n+" de "+TELAS[t]+" T"+tl+" "+COLORES[c]+"? Quedan "+(cur-n)+".",function(){
+      quitar(t,tl,c,n);$("sCant").value=1;toast("Stock actualizado ✓");
+    });
+  };
+  $("sZero").onclick=function(){
+    var t=$("sTela").value,tl=$("sTalle").value,c=$("sCol").value, cur=avail(t,tl,c);
+    if(!cur){toast("Ya no hay stock de esa combinación.");return}
+    ask("¿Sacar del stock "+TELAS[t]+" T"+tl+" "+COLORES[c]+"? Se borran las "+cur+" que hay.",function(){
+      quitar(t,tl,c,cur);toast("Sacada del stock ✓");
+    });
+  };
+  stkInfo();
+})();
 tipo();
 </script>
 </body></html>
