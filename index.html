@@ -3,10 +3,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pedidos · Origen Verde</title>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);--l1:#2f7159;--l2:#1f4e3d;--l3:#163a2d;
 --bg:#f5f2ea;--card:#fff;--ink:#1d2b24;--mut:#6b7a72;--line:#e6e1d4;--g:#1f4e3d;--g2:#e3efe8;--gold:#b9791a;--gold2:#faefd9;--red:#b3402f;--red2:#fbe5e0}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121815;--card:#1c2622;--ink:#eef1ee;--mut:#98a69e;--line:#2b3832;--g:#63c79a;--g2:#1f3a2f;--gold:#e5b25c;--gold2:#3a2f18;--red:#ea806a;--red2:#40241f}}
+#loginScreen{background:
+url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 200' preserveAspectRatio='none'%3E%3Cpath d='M0 110Q200 50 400 100T800 80V200H0Z' fill='%23000' fill-opacity='.25'/%3E%3Cpath d='M0 150Q250 100 480 145T800 130V200H0Z' fill='%23000' fill-opacity='.4'/%3E%3C/svg%3E") bottom/100% 190px no-repeat,
+repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 2px,transparent 2px 16px),
+linear-gradient(180deg,var(--l1) 0%,var(--l2) 55%,var(--l3) 100%)}
+#loginScreen .card{box-shadow:0 12px 40px rgba(0,0,0,.35);border:0}
+#loginScreen,.toast{transition:background .3s}
+.card,.kpi{transition:background .3s}
+:root[data-user="Benja"]{--g:#1f6b8a;--g2:#e0eef4;--l1:#2b6cb0;--l2:#1f7a6b;--l3:#14503f}
+:root[data-user="Anto"]{--g:#c2571a;--g2:#fbe8d8;--l1:#ea9a4e;--l2:#7c8f3c;--l3:#1f5a3c}
+:root[data-user="Anto"] .ok{background:#e3efe8;color:#1f6b4a}
+@media(prefers-color-scheme:dark){
+:root[data-user="Benja"]:not([data-theme="light"]){--g:#5fb8d8;--g2:#1c3540}
+:root[data-user="Anto"]:not([data-theme="light"]){--g:#f0a05a;--g2:#43301c}
+:root[data-user="Anto"]:not([data-theme="light"]) .ok{background:#1f3a2f;color:#63c79a}}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
 body{margin:0;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;padding:0 14px 96px;max-width:640px;margin-inline:auto}
@@ -53,7 +67,7 @@ nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head><body>
 
-<div id="loginScreen" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:14px">
+<div id="loginScreen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:14px">
   <div class="card" style="width:100%;max-width:640px;text-align:center">
     <h1 style="font-size:21px;margin:0;color:var(--g)">🌿 Origen Verde</h1>
     <p style="margin:4px 0 16px;color:var(--mut);font-size:13px">¿Quién está entrando?</p>
@@ -153,8 +167,12 @@ function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";clear
 var askFn=null;
 function ask(m,fn){askFn=fn;$("asktxt").textContent=m;$("ovl").style.display="flex"}
 
+function aplicarTema(u){document.documentElement.setAttribute("data-user",u)}
+$("loginUser").onchange = function(){aplicarTema(this.value)};
+aplicarTema($("loginUser").value);
 function iniciarSesion(){
   var u = $("loginUser").value;
+  aplicarTema(u);
   currentUser = USERS[u];
   $("loginScreen").style.display = "none";
   $("appGreeting").textContent = "Pedidos, entregas y cobros · " + currentUser.nombre;
