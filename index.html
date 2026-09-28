@@ -300,7 +300,33 @@ function renderProv(){
   $("prov").innerHTML=html;
 }
 
+function barChart(vals, fmt){
+  var W=320,H=140,pl=6,pb=18,pt=16,max=Math.max.apply(null,vals.concat([1]));
+  var bw=(W-pl*2)/12, s='<svg viewBox="0 0 '+W+' '+H+'" role="img">';
+  vals.forEach(function(v,i){
+    var h=(H-pb-pt)*v/max, x=pl+i*bw+bw*0.15, y=H-pb-h;
+    s+='<rect x="'+x+'" y="'+y+'" width="'+(bw*0.7)+'" height="'+(v>0?Math.max(h,2):0)+'" rx="3" fill="var(--g)"/>';
+    if(v>0) s+='<text x="'+(x+bw*0.35)+'" y="'+(y-3)+'" text-anchor="middle" font-size="8" fill="var(--mut)">'+fmt(v)+'</text>';
+    s+='<text x="'+(x+bw*0.35)+'" y="'+(H-5)+'" text-anchor="middle" font-size="9" fill="var(--mut)">'+MESES[i]+'</text>';
+  });
+  return s+'</svg>';
+}
+
 function renderRes(){
+  var cur=String(new Date().getFullYear()), ys={}; ys[cur]=1;
+  orders.forEach(function(o){ if(o.fecha) ys[String(o.fecha).slice(0,4)]=1; });
+  var yl=Object.keys(ys).sort().reverse(), sel=$("anio"), prev=sel.value||cur;
+  sel.innerHTML=yl.map(function(y){return '<option>'+y+'</option>'}).join("");
+  sel.value = yl.indexOf(prev)>=0 ? prev : cur;
+  var y=sel.value, cnt=[0,0,0,0,0,0,0,0,0,0,0,0], gan=cnt.slice(), nPed=0, ventas=0, ganT=0;
+  orders.forEach(function(o){
+    if(!o.fecha || String(o.fecha).slice(0,4)!==y) return;
+    var m=parseInt(String(o.fecha).slice(5,7),10)-1; if(m<0||m>11) return;
+    cnt[m]+=1; gan[m]+=o.ganancia||0; nPed++; ventas+=o.total||0; ganT+=o.ganancia||0;
+  });
+  $("k1").textContent=nPed; $("k2").textContent=money(ventas); $("k3").textContent=money(ganT);
+  $("g1").innerHTML=barChart(cnt,function(v){return v});
+  $("g2").innerHTML=barChart(gan,function(v){return Math.round(v/1000)+"k"});
   var h="";
   Object.keys(TELAS).forEach(function(t){
     var parts = talles(t).map(function(tl){
@@ -325,6 +351,7 @@ document.querySelector("nav").onclick = function(e){
   document.querySelectorAll("nav button").forEach(function(x){x.classList.toggle("on",x===b)});
   document.querySelectorAll(".view").forEach(function(v){v.classList.toggle("on",v.id==="v-"+b.dataset.v)});
 };
+$("anio").onchange = renderRes;
 $("chips").onclick = function(e){var b=e.target.closest("[data-f]"); if(b){filtro=b.dataset.f; renderPedidos();}};
 $("lista").onclick = function(e){
   var b=e.target.closest("button[data-a]"); if(!b) return;
@@ -358,6 +385,11 @@ db.collection("config").doc("stock").onSnapshot(function(doc) {
     refreshBomb();
     renderRes();
   }
+});
+
+tipo();
+</script>
+</body></html>
 });
 
 tipo();
