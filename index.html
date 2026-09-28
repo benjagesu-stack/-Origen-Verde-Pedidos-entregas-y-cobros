@@ -67,6 +67,21 @@ svg{width:100%;height:auto;display:block}
 .chk input{width:22px;height:22px;flex:none;padding:0;margin:0}
 .chk span.t{flex:1}
 textarea{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-top:12px;resize:vertical}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none;vertical-align:middle}
+.urgd{background:#d64545}.calmd{background:#2f9e6b}
+.dotb{width:22px;height:22px;padding:5px;border:0;border-radius:50%;background-clip:content-box;flex:none;cursor:pointer}
+.dotb.urgd{background-color:#d64545}.dotb.calmd{background-color:#2f9e6b}
+.acts .w{width:44px;flex:none;font-size:17px;padding:8px}
+.bt{margin-top:14px}
+.bth{font-size:14px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 0;background:none;border:0;border-bottom:2px solid var(--line);border-radius:0;cursor:pointer;text-align:left}
+.bth span{font-weight:400;color:var(--mut);font-size:12px}
+.bth em{font-style:normal;color:var(--red);font-weight:700}
+.br{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.br>b{width:34px;flex:none;font-size:14px}
+.bps{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:3px 10px 3px 8px;font-size:12px}
+.pill i{width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.3)}
+.pill b{color:var(--red)}
 .btn2{cursor:pointer;font-weight:600;font-size:14px}
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));max-width:640px;margin:auto;z-index:5}
 nav button{background:none;border:0;padding:6px 2px;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
@@ -97,6 +112,7 @@ nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-
   <div class="row"><div><label for="fecha">Fecha</label><input type="date" id="fecha"></div>
   <div><label for="cant">Cantidad</label><input type="number" id="cant" min="1" value="1" inputmode="numeric"></div></div>
   <label for="cli">Cliente</label><input id="cli" placeholder="Nombre del cliente" autocomplete="off">
+  <div id="telWrap" style="display:none"><label for="tel">WhatsApp del cliente (opcional)</label><input id="tel" type="tel" inputmode="tel" placeholder="Ej: 3512345678" autocomplete="off"></div>
   <label>Prioridad</label>
   <div class="prio" id="prio"><button type="button" data-p="tranquilo" class="on" aria-label="Tranquilo"></button><button type="button" data-p="urgente" aria-label="Urgente"></button></div>
   <label for="prod">Producto</label>
@@ -110,16 +126,6 @@ nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-
   <div class="auto"><div>Precio unidad<b id="pv">-</b></div><div>Costo unidad<b id="pc">-</b></div>
   <div>Total venta<b id="tv">-</b></div><div>Ganancia<b id="pg">-</b></div></div>
   <button class="big" id="add">Guardar pedido</button></div>
- <div class="card"><button id="stkToggle" type="button" style="display:flex;justify-content:space-between;align-items:center;background:none;border:0;padding:0;font-weight:700;cursor:pointer;color:var(--ink)"><span>📦 Nuevo stock de bombachas</span><span id="stkArrow">▾</span></button>
-  <div id="stkBody" style="display:none">
-   <div class="row"><div><label for="sTela">Tela</label><select id="sTela"></select></div>
-   <div><label for="sTalle">Talle</label><select id="sTalle"></select></div></div>
-   <div class="row"><div><label for="sCol">Color</label><select id="sCol"></select></div>
-   <div><label for="sCant">Cantidad</label><input type="number" id="sCant" min="1" value="1" inputmode="numeric"></div></div>
-   <div class="stk" id="sInfo"></div>
-   <button class="big" id="sAdd" type="button">➕ Agregar al stock</button>
-   <div class="row" style="margin-top:10px"><div><button id="sSub" type="button" class="btn2">➖ Quitar cantidad</button></div><div><button id="sZero" type="button" class="btn2" style="color:var(--red)">🗑 Ya no hay</button></div></div>
-  </div></div>
 </section>
 
 <section class="view" id="v-pedidos">
@@ -149,10 +155,32 @@ nav button i{font-style:normal;font-size:20px}nav button.on{color:var(--g);font-
   <div class="kpi"><span>Ventas</span><b id="k2">$0</b></div><div class="kpi"><span>Ganancia</span><b id="k3">$0</b></div></div></div>
  <div class="card"><h2>Pedidos por mes</h2><div id="g1"></div></div>
  <div class="card"><h2>Ganancia por mes</h2><div id="g2"></div></div>
- <div class="card"><h2>Stock de bombachas</h2><div id="stock" class="stock"></div></div>
+ <div class="card"><button id="stkToggle" type="button" style="display:flex;justify-content:space-between;align-items:center;background:none;border:0;padding:0;font-weight:700;cursor:pointer;color:var(--ink)"><span>📦 Nuevo stock de bombachas</span><span id="stkArrow">▾</span></button>
+  <div id="stkBody" style="display:none">
+   <div class="row"><div><label for="sTela">Tela</label><select id="sTela"></select></div>
+   <div><label for="sTalle">Talle</label><select id="sTalle"></select></div></div>
+   <div class="row"><div><label for="sCol">Color</label><select id="sCol"></select></div>
+   <div><label for="sCant">Cantidad</label><input type="number" id="sCant" min="1" value="1" inputmode="numeric"></div></div>
+   <div class="stk" id="sInfo"></div>
+   <button class="big" id="sAdd" type="button">➕ Agregar al stock</button>
+   <div class="row" style="margin-top:10px"><div><button id="sSub" type="button" class="btn2">➖ Quitar cantidad</button></div><div><button id="sZero" type="button" class="btn2" style="color:var(--red)">🗑 Ya no hay</button></div></div>
+  </div></div>
+ <div class="card"><button id="bajoToggle" type="button" style="display:flex;justify-content:space-between;align-items:center;background:none;border:0;padding:0;font-weight:700;cursor:pointer;color:var(--ink)"><span>⚠️ Stock bajo <span id="bajoN"></span></span><span id="bajoArrow">▾</span></button>
+  <div id="bajoBody" style="display:none">
+   <div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span style="font-size:13px;color:var(--mut)">Mostrar talles con</span>
+   <select id="bajoU" style="width:auto;padding:6px 10px"><option value="1">1 bombacha o menos</option><option value="2">2 o menos</option><option value="3">3 o menos</option></select></div>
+   <div id="bajoList"></div>
+  </div></div>
  <button class="big" id="btnExportarCSV" style="background:var(--card);color:var(--ink);border:1px solid var(--line)">📥 Descargar copia CSV</button>
 </section>
 
+<div class="ovl" id="ovlCli"><div class="sheet" style="max-height:92vh;overflow-y:auto">
+ <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Mensaje al cliente</h2><button id="cliX" type="button" aria-label="Cerrar" style="width:40px;padding:6px;font-size:18px;cursor:pointer">✕</button></div>
+ <div class="chips" id="cliChips" style="margin:12px 0 0"></div>
+ <textarea id="cliTxt" rows="6"></textarea>
+ <label for="cliTel">WhatsApp del cliente</label><input id="cliTel" type="tel" inputmode="tel" placeholder="Ej: 3512345678 (sin 0 ni 15)" autocomplete="off">
+ <div class="row" style="margin-top:10px"><div><button id="cliCopy" class="btn2">📋 Copiar</button></div><div><button id="cliWa" class="btn2 go" style="background:var(--g);color:#fff;border:0">💬 WhatsApp</button></div></div>
+</div></div>
 <div class="toast" id="toast" role="status"></div>
 <div class="ovl" id="ovl"><div class="sheet"><p id="asktxt"></p><div class="row"><div><button id="asknop">Cancelar</button></div><div><button class="go" id="askyes">Confirmar</button></div></div></div></div>
 <nav><button data-v="nuevo" class="on"><i>➕</i>Nuevo</button><button data-v="pedidos"><i>📋</i>Pedidos</button>
@@ -203,6 +231,7 @@ aplicarTema($("loginUser").value);
 function iniciarSesion(){
   var u = $("loginUser").value;
   $("msgCard").style.display = (u==="Benja") ? "" : "none";
+  $("telWrap").style.display = (u==="Benja") ? "" : "none";
   aplicarTema(u);
   currentUser = USERS[u];
   $("loginScreen").style.display = "none";
@@ -211,6 +240,7 @@ function iniciarSesion(){
   w.textContent = currentUser.mensaje;
   w.style.display = "block";
   setTimeout(function(){w.style.display="none"}, 3500);
+  render();
 }
 $("loginBtn").onclick = iniciarSesion;
 
@@ -277,12 +307,12 @@ function addOrder(){
     det = "Alpargata · "+$("cola").value+" · T"+$("tala").value;
   }
   var o = {fecha:$("fecha").value, cliente:cli, producto:prod, detalle:det, cantidad:q,
-           venta:p.venta, costo:p.costo, total:p.venta*q, ganancia:(p.venta-p.costo)*q, entregado:false, pagado:false, provPagado:false, enStock:false, prioridad:prioSel,
+           venta:p.venta, costo:p.costo, total:p.venta*q, ganancia:(p.venta-p.costo)*q, entregado:false, pagado:false, provPagado:false, enStock:false, prioridad:prioSel, telefono:$("tel").value.trim(),
            creadoPor:(currentUser&&currentUser.nombre)||"Sin registrar"};
   if(key){ o.stockKey = key.join("|"); stock[t][tl][c] -= q; saveStock(); }
   
   db.collection("pedidos").add(o).then(function(){
-    $("cli").value = ""; $("cant").value = 1; setPrio("tranquilo"); tipo();
+    $("cli").value = ""; $("tel").value = ""; $("cant").value = 1; setPrio("tranquilo"); tipo();
     toast("Pedido guardado en la base de datos ✓");
   }).catch(function(){ toast("Error al guardar."); });
 }
@@ -306,6 +336,8 @@ var prioSel = "tranquilo";
 function setPrio(v){prioSel=v; document.querySelectorAll("#prio button").forEach(function(b){b.classList.toggle("on",b.dataset.p===v)})}
 $("prio").onclick = function(e){var b=e.target.closest("button[data-p]"); if(b) setPrio(b.dataset.p)};
 function isUrg(o){return o.prioridad==="urgente"}
+function esBenja(){return !!(currentUser&&currentUser.nombre==="Benja")}
+function dotBtn(o){return o.entregado?'':'<button type="button" class="dotb '+(isUrg(o)?'urgd':'calmd')+'" data-a="prio" data-id="'+esc(o.id)+'" aria-label="Prioridad: '+(isUrg(o)?'urgente':'tranquilo')+'. Tocar para cambiar"></button>'}
 function prioBadge(o){return isUrg(o)?'<span class="bd urg">🔴 Urgente</span>':'<span class="bd calm">🟢 Tranquilo</span>'}
 function renderPedidos(){
   var ent=0, cob=0, cobrado=0;
@@ -325,11 +357,10 @@ function renderPedidos(){
     var e=o.entregado ? '<span class="bd ok">✓ Entregado</span>' : (disponible ? '<span class="bd ok">✓ En stock</span>' : '<span class="bd wait">⏳ Esperando proveedor</span>');
     var p=o.pagado?'<span class="bd ok">✓ Pagó</span>':'<span class="bd bad">Debe '+money(o.total||0)+'</span>';
     var entBtn = o.entregado ? '<button data-a="ent" data-id="'+esc(o.id)+'">Deshacer entrega</button>' : (disponible ? '<button data-a="ent" data-id="'+esc(o.id)+'">📦 Marcar entregado</button>' : '<button disabled>🔒 Esperando proveedor</button>');
-    return '<div class="ord"><div class="top"><b>'+esc(o.cliente)+'</b><b>'+money(o.total||0)+'</b></div>'+
-    '<div class="sub">'+esc(o.detalle||o.producto)+' × '+esc(o.cantidad)+' · pedido '+esc(fd(o.fecha))+' · 👤 '+esc(o.creadoPor||"Sin registrar")+'</div>'+(o.entregado?'':prioBadge(o))+e+p+
+    return '<div class="ord"><div class="top"><b style="display:flex;align-items:center;gap:2px">'+dotBtn(o)+esc(o.cliente)+'</b><b>'+money(o.total||0)+'</b></div>'+
+    '<div class="sub">'+esc(o.detalle||o.producto)+' × '+esc(o.cantidad)+' · pedido '+esc(fd(o.fecha))+' · 👤 '+esc(o.creadoPor||"Sin registrar")+'</div>'+e+p+
     '<div class="acts">'+entBtn+'<button data-a="pag" data-id="'+esc(o.id)+'">'+(o.pagado?'Deshacer pago':'💵 Marcar pagó')+'</button>'+
-    '<button class="x" data-a="del" data-id="'+esc(o.id)+'">×</button></div>'+
-    (o.entregado?'':'<div class="acts" style="margin-top:8px"><button data-a="prio" data-id="'+esc(o.id)+'">'+(isUrg(o)?'🟢 Pasar a tranquilo':'🔴 Marcar urgente')+'</button></div>')+'</div>';
+    (esBenja()?'<button class="w" data-a="wa" data-id="'+esc(o.id)+'" aria-label="Avisar al cliente">💬</button>':'')+'<button class="x" data-a="del" data-id="'+esc(o.id)+'">×</button></div></div>';
   }).join("");
 }
 
@@ -347,7 +378,7 @@ function renderProv(){
     html += '<table class="tbl"><tr><th>Pedido</th><th>Estado</th><th class="n">Costo</th><th></th></tr>'+
       pendientes.map(function(o){
         var c=(o.costo||0)*(o.cantidad||0);
-        var estado = (o.enStock ? '<span class="bd ok">✓ En stock</span>' : '<span class="bd wait">⏳ Esperando</span>') + (!o.enStock&&isUrg(o)?'<span class="bd urg">🔴 Urgente</span>':'');
+        var estado = (o.enStock ? '<span class="bd ok">✓ En stock</span>' : '<span class="bd wait">⏳ Esperando</span>') + (!o.enStock&&isUrg(o)?'<span class="dot urgd" title="Urgente"></span>':'');
         var accion = o.enStock ? '<button data-pa="pay" data-id="'+esc(o.id)+'">💵 Pagar</button><button data-pa="unstock" data-id="'+esc(o.id)+'" style="margin-top:6px">↩ No llegó</button>' : '<button data-pa="stock" data-id="'+esc(o.id)+'">📦 Recibido</button>';
         return '<tr><td><b>'+esc(o.cliente)+'</b></td><td>'+estado+'</td><td class="n">'+money(c)+'</td><td>'+accion+'</td></tr>';
       }).join("")+'</table>';
@@ -388,14 +419,8 @@ function renderRes(){
   $("k1").textContent=nPed; $("k2").textContent=money(ventas); $("k3").textContent=money(ganT);
   $("g1").innerHTML=barChart(cnt,function(v){return v});
   $("g2").innerHTML=barChart(gan,function(v){return Math.round(v/1000)+"k"});
-  var h="";
-  Object.keys(TELAS).forEach(function(t){
-    var parts = talles(t).map(function(tl){
-      return "T"+tl+" ("+colores(t,tl).map(function(c){return stock[t][tl][c]+" "+(COLORES[c]||c).toLowerCase()}).join(", ")+")";
-    });
-    h += "<div><b>"+esc(TELAS[t])+":</b> "+(parts.length?esc(parts.join(" · ")):"sin stock")+"</div>";
-  });
-  $("stock").innerHTML = h;
+
+  if($("bajoList")) renderBajo();
 }
 
 var selMsg = {}, msgDirty = false;
@@ -430,7 +455,7 @@ function renderMsg(){
   Object.keys(selMsg).forEach(function(k){ if(!ids[k]) delete selMsg[k] });
   $("msgList").innerHTML = pend.length ? pend.map(function(o){
     return '<label class="chk"><input type="checkbox" data-id="'+esc(o.id)+'"'+(selMsg[o.id]?' checked':'')+'><span class="t">'+esc(lineaProd(o))+' × '+esc(o.cantidad)+'</span>'+
-      (isUrg(o)?'<span class="bd urg" style="margin:0">🔴 Urgente</span>':'<span class="bd calm" style="margin:0">🟢</span>')+'</label>';
+      '<span class="dot '+(isUrg(o)?'urgd':'calmd')+'"></span>'+'</label>';
   }).join("") : '<div class="empty">No hay pedidos esperando al proveedor.</div>';
   updMsgText();
 }
@@ -477,6 +502,7 @@ $("lista").onclick = function(e){
   var id=b.dataset.id, o=orders.filter(function(x){return x.id===id})[0]; if(!o) return;
   if(b.dataset.a==="ent") upd(id, o.entregado?{entregado:false}:{entregado:true,fechaEntrega:hoy()});
   else if(b.dataset.a==="pag") upd(id,{pagado:!o.pagado});
+  else if(b.dataset.a==="wa") abrirCli(o);
   else if(b.dataset.a==="prio") upd(id,{prioridad:isUrg(o)?"tranquilo":"urgente"});
   else if(b.dataset.a==="del") del(id);
 };
@@ -568,6 +594,76 @@ function stkInfo(){$("sInfo").textContent="Stock actual de esta combinación: "+
   };
   stkInfo();
 })();
+// ---- Stock bajo ----
+var HEX={beige:"#d9c7a0",verde:"#2f7159",bordo:"#7a1f2b",negro:"#222222",gris:"#9aa0a6"};
+var openT={};
+function renderBajo(){
+  var u=parseInt($("bajoU").value,10)||1, h="", n=0;
+  Object.keys(TELAS).forEach(function(t){
+    var known={};
+    Object.keys(DEFAULT_STOCK[t]||{}).forEach(function(k){known[k]=1});
+    Object.keys(stock[t]||{}).forEach(function(k){known[k]=1});
+    var rows="", cnt=0;
+    Object.keys(known).sort(function(a,b){return a-b}).forEach(function(tl){
+      var cs=colores(t,tl), tot=0;
+      cs.forEach(function(c){tot+=stock[t][tl][c]});
+      if(tot>u) return;
+      cnt++;
+      if(!tot) rows+='<div class="br"><b>T'+esc(tl)+'</b><span class="pill" style="color:var(--red)">Sin stock</span></div>';
+      else rows+='<div class="br"><b>T'+esc(tl)+'</b><div class="bps">'+cs.map(function(c){
+        return '<span class="pill"><i style="background:'+(HEX[c]||"#ccc")+'"></i>'+esc(COLORES[c]||c)+' <b>'+stock[t][tl][c]+'</b></span>';
+      }).join("")+'</div></div>';
+    });
+    n+=cnt;
+    var op=!!openT[t];
+    h+='<div class="bt"><button class="bth" type="button" data-t="'+t+'"><b>'+esc(TELAS[t])+'</b><span>'+(cnt?'<em>'+cnt+'</em> '+(cnt===1?'talle':'talles'):'todo bien ✓')+' '+(op?'▴':'▾')+'</span></button>'+
+       (op?(rows||'<div class="empty" style="padding:14px 0">No hay talles con poco stock.</div>'):'')+'</div>';
+  });
+  $("bajoList").innerHTML=h;
+  $("bajoN").innerHTML=n?'<span style="color:var(--red)">('+n+')</span>':'<span style="color:var(--mut);font-weight:400">(0)</span>';
+}
+$("bajoList").onclick=function(e){var b=e.target.closest("[data-t]"); if(!b) return; openT[b.dataset.t]=!openT[b.dataset.t]; renderBajo()};
+$("bajoU").onchange=renderBajo;
+$("bajoToggle").onclick=function(){var o=$("bajoBody").style.display==="none";$("bajoBody").style.display=o?"":"none";$("bajoArrow").textContent=o?"▴":"▾"};
+
+// ---- Mensaje al cliente ----
+var cliOrder=null, cliKind="llego";
+function nomCli(o){return String(o.cliente||"").trim().split(/\s+/)[0]||""}
+function tplCli(k,o){
+  var n=nomCli(o), sal="¡Hola"+(n?" "+n:"")+"! 🌿 ", d=(o.detalle||o.producto||"")+" × "+(o.cantidad||1);
+  if(k==="llego") return sal+"Tu pedido ("+d.split(" · ").join(" ")+") ya llegó. ¿Coordinamos la entrega? 😊";
+  if(k==="pago") return sal+"Te escribo por el pago de tu pedido ("+d.split(" · ").join(" ")+"), son "+money(o.total||0)+". Avisame cuando puedas, ¡gracias! 🙌";
+  return sal+"Sobre tu pedido ("+d.split(" · ").join(" ")+"): todavía estamos esperando que llegue del proveedor. Apenas llegue te aviso 😊";
+}
+function cliChips(){
+  var K=[["llego","📦 Ya llegó"],["pago","💵 Pago"],["demora","⏳ Demora"]];
+  $("cliChips").innerHTML=K.map(function(k){return '<button class="chip'+(cliKind===k[0]?' on':'')+'" data-k="'+k[0]+'" type="button">'+k[1]+'</button>'}).join("");
+}
+function abrirCli(o){
+  if(!esBenja()) return;
+  cliOrder=o;
+  cliKind = o.entregado ? (o.pagado?"llego":"pago") : ((o.enStock)?"llego":"demora");
+  cliChips(); $("cliTxt").value=tplCli(cliKind,o); $("cliTel").value=o.telefono||"";
+  $("ovlCli").style.display="flex";
+}
+$("cliChips").onclick=function(e){var b=e.target.closest("[data-k]"); if(!b||!cliOrder) return; cliKind=b.dataset.k; cliChips(); $("cliTxt").value=tplCli(cliKind,cliOrder)};
+$("cliX").onclick=function(){$("ovlCli").style.display="none"};
+$("ovlCli").onclick=function(e){if(e.target===this) this.style.display="none"};
+$("cliCopy").onclick=function(){
+  var t=$("cliTxt").value;
+  function fb(){$("cliTxt").select(); try{document.execCommand("copy"); toast("Texto copiado ✓")}catch(e){toast("No se pudo copiar.")}}
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){toast("Texto copiado ✓")}).catch(fb); else fb();
+};
+$("cliWa").onclick=function(){
+  var t=$("cliTxt").value, raw=$("cliTel").value.replace(/\D/g,"");
+  if(raw){
+    raw=raw.replace(/^0+/,"");
+    if(raw.indexOf("54")!==0) raw="549"+raw;
+    if(cliOrder && raw!==String(cliOrder.telefono||"").replace(/\D/g,"")) upd(cliOrder.id,{telefono:$("cliTel").value.trim()});
+  }
+  window.open("https://wa.me/"+raw+"?text="+encodeURIComponent(t),"_blank");
+};
+renderBajo();
 tipo();
 </script>
 </body></html>
